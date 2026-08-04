@@ -7,9 +7,10 @@ import { IncidentList } from "./components/IncidentList";
 import { MapView } from "./components/MapView";
 import { IncidentDetail } from "./components/IncidentDetail";
 import { SimulatorPanel } from "./components/SimulatorPanel";
+import { ScheduledOutagePanel } from "./components/ScheduledOutagePanel";
 import "./App.css";
 
-type Tab = "console" | "simulator";
+type Tab = "console" | "simulator" | "network";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("console");
@@ -33,8 +34,7 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Any poll landing updates the "last updated" clock in the stats
-  // bar -- close enough for an operator glance. Runs as an effect
-  // (not during render) so it never triggers a same-render re-set.
+  // bar — close enough for an operator glance.
   useEffect(() => {
     if (incidents) setLastUpdated(new Date());
   }, [incidents]);
@@ -51,6 +51,11 @@ export default function App() {
     ? tickets?.find((t) => t.incident_id === selectedIncident.id)
     : undefined;
 
+  // Count open (non-resolved) incidents for the map badge
+  const openIncidentCount = (incidents ?? []).filter(
+    (i) => !["VERIFIED", "CLOSED"].includes(i.status)
+  ).length;
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -58,31 +63,43 @@ export default function App() {
           <span className="app-title-main">KSPDB</span>
           <span className="app-title-sub">Fault Localization Console</span>
         </div>
+
         <nav className="app-tabs">
           <button
             className={`app-tab ${tab === "console" ? "app-tab-active" : ""}`}
             onClick={() => setTab("console")}
           >
-            Operator console
+            Operator Console
           </button>
           <button
             className={`app-tab ${tab === "simulator" ? "app-tab-active" : ""}`}
             onClick={() => setTab("simulator")}
           >
-            Fault simulator
+            Fault Simulator
+          </button>
+          <button
+            className={`app-tab ${tab === "network" ? "app-tab-active" : ""}`}
+            onClick={() => setTab("network")}
+          >
+            Scheduled Outages
           </button>
         </nav>
+
+        <div className="header-live">
+          <span className="header-live-dot" />
+          Live
+        </div>
       </header>
 
       <StatsBar stats={dashboard} lastUpdated={lastUpdated} />
 
-      {tab === "console" ? (
+      {tab === "console" && (
         <main className="console-layout">
           <div className="console-list-pane">
             {incidentsError && (
               <div className="banner-error">
-                Can't reach the backend at the configured API URL. Check VITE_API_BASE_URL and that
-                the backend is running.
+                Can't reach the backend at the configured API URL. Check{" "}
+                <code>VITE_API_BASE_URL</code> and that the backend is running.
               </div>
             )}
             <IncidentList
@@ -98,6 +115,7 @@ export default function App() {
               lookup={lookup}
               selectedId={selectedId}
               onSelect={setSelectedId}
+              openIncidentCount={openIncidentCount}
             />
           </div>
 
@@ -113,10 +131,16 @@ export default function App() {
             </div>
           )}
         </main>
-      ) : (
+      )}
+
+      {tab === "simulator" && (
         <main className="simulator-layout">
           <SimulatorPanel onAction={refreshAll} />
         </main>
+      )}
+
+      {tab === "network" && (
+        <ScheduledOutagePanel />
       )}
     </div>
   );

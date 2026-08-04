@@ -53,6 +53,7 @@ def _run_localization_pipeline(db: Session):
     localization = LocalizationService(db)
 
     incidents_found = localization.process()
+    suppressed_count = getattr(localization, "suppressed_count", 0)
 
     dead_sensor_service = DeadSensorService(db)
 
@@ -67,6 +68,17 @@ def _run_localization_pipeline(db: Session):
         ticket_service = TicketService(db)
 
         for result in incidents_found:
+            # Idempotency check: don't create duplicate incident if active incident already exists for this end_pole
+            existing_incident = (
+                db.query(Incident)
+                .filter(
+                    Incident.end_pole == result["end_pole"],
+                    Incident.status.notin_(["VERIFIED", "CLOSED"])
+                )
+                .first()
+            )
+            if existing_incident:
+                continue
 
             if result.get("fault_type"):
                 fault_type = result["fault_type"]
@@ -87,7 +99,7 @@ def _run_localization_pipeline(db: Session):
 
             created_incidents.append(incident)
 
-    return created_incidents
+    return created_incidents, suppressed_count
 
 
 def _run_verification_pipeline(db: Session):
@@ -194,16 +206,17 @@ def inject_span_fault(
             request.pole_ids
         )
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, suppressed_count = _run_localization_pipeline(db)
 
         db.commit()
 
+        msg = f"Span fault injected successfully. Incidents created: {len(created_incidents)}"
+        if suppressed_count > 0:
+            msg += f" ({suppressed_count} fault alert(s) suppressed by active scheduled outage)"
+
         return SimulationResponse(
             success=True,
-            message=(
-                f"Span fault injected successfully. "
-                f"Incidents created: {len(created_incidents)}"
-            )
+            message=msg
         )
 
     except Exception as e:
@@ -246,16 +259,17 @@ def inject_transformer_fault(
             transformer.id
         )
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, suppressed_count = _run_localization_pipeline(db)
 
         db.commit()
 
+        msg = f"Transformer fault injected successfully. Incidents created: {len(created_incidents)}"
+        if suppressed_count > 0:
+            msg += f" ({suppressed_count} fault alert(s) suppressed by active scheduled outage on {request.transformer_id})"
+
         return SimulationResponse(
             success=True,
-            message=(
-                f"Transformer fault injected successfully. "
-                f"Incidents created: {len(created_incidents)}"
-            )
+            message=msg
         )
 
     except HTTPException:
@@ -304,16 +318,17 @@ def inject_feeder_fault(
 
         injector.inject_feeder_fault(request.feeder_id)
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, suppressed_count = _run_localization_pipeline(db)
 
         db.commit()
 
+        msg = f"Feeder fault injected successfully. Incidents created: {len(created_incidents)}"
+        if suppressed_count > 0:
+            msg += f" ({suppressed_count} fault alert(s) suppressed by active scheduled outage on feeder {request.feeder_id})"
+
         return SimulationResponse(
             success=True,
-            message=(
-                f"Feeder fault injected successfully. "
-                f"Incidents created: {len(created_incidents)}"
-            )
+            message=msg
         )
 
     except HTTPException:

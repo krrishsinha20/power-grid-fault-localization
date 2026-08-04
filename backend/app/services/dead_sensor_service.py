@@ -44,7 +44,7 @@ class DeadSensorService:
 
                 Pole.energized == True,
 
-                Pole.last_seen_at < threshold
+                Pole.active == False
 
             )
 

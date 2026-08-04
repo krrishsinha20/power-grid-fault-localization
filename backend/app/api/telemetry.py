@@ -64,6 +64,17 @@ def ingest_telemetry(
             ticket_service = TicketService(db)
 
             for result in incidents:
+                # Idempotency check: don't create duplicate incident if active incident already exists for this end_pole
+                existing = (
+                    db.query(Incident)
+                    .filter(
+                        Incident.end_pole == result["end_pole"],
+                        Incident.status.notin_(["VERIFIED", "CLOSED"])
+                    )
+                    .first()
+                )
+                if existing:
+                    continue
 
                 # Dead sensor incidents already know their type
                 if "fault_type" in result:

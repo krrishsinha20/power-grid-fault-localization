@@ -17,6 +17,15 @@ class TicketService:
         priority: str = "HIGH"
     ) -> Ticket:
 
+        existing = (
+            self.db.query(Ticket)
+            .filter(Ticket.incident_id == incident.id)
+            .first()
+        )
+
+        if existing:
+            return existing
+
         ticket = Ticket(
 
             ticket_id=f"TKT-{uuid.uuid4().hex[:8].upper()}",

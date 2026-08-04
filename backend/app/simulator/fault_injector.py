@@ -18,10 +18,19 @@ class FaultInjector:
         self.db = db
 
     def inject_span_fault(self, pole_ids: list[str]):
+        from app.localization.graph_builder import GraphBuilder
+        import networkx as nx
+
+        graph = GraphBuilder(self.db).build()
+
+        all_affected = set(pole_ids)
+        for pid in pole_ids:
+            if pid in graph:
+                all_affected.update(nx.descendants(graph, pid))
 
         poles = (
             self.db.query(Pole)
-            .filter(Pole.pole_id.in_(pole_ids))
+            .filter(Pole.pole_id.in_(all_affected))
             .all()
         )
 

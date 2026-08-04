@@ -11,7 +11,7 @@ const OPEN_STATUSES = new Set(["DETECTED", "ACKNOWLEDGED", "ASSIGNED", "IN_PROGR
 
 /**
  * Open incidents first (worst impact first), resolved ones pushed to
- * the bottom in a visually quieter state -- an operator working the
+ * the bottom in a visually quieter state — an operator working the
  * night shift should never have to scroll past closed tickets to find
  * the next thing that needs attention.
  */
@@ -29,65 +29,91 @@ function sortIncidents(incidents: Incident[]): Incident[] {
 
 export function IncidentList({ incidents, selectedId, onSelect }: Props) {
   const sorted = sortIncidents(incidents);
+  const openCount = sorted.filter(i => OPEN_STATUSES.has(i.status)).length;
 
   if (sorted.length === 0) {
     return (
-      <div className="empty-state">
-        <p>No incidents.</p>
-        <p className="text-muted">The grid is quiet. New faults will appear here the moment telemetry confirms one.</p>
-      </div>
+      <>
+        <div className="incident-list-header">
+          <span className="incident-list-title">Incidents</span>
+          <span className="incident-list-count">0</span>
+        </div>
+        <div className="empty-state">
+          <div className="empty-state-icon">✅</div>
+          <p>Grid is quiet.</p>
+          <p className="text-faint" style={{ fontSize: 12 }}>
+            New faults will appear here the moment telemetry confirms one.
+            Use the Fault Simulator tab to inject a test fault.
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="incident-list">
-      {sorted.map((incident) => {
-        const isOpen = OPEN_STATUSES.has(incident.status);
-        return (
-          <button
-            key={incident.incident_id}
-            className={`incident-card ${incident.incident_id === selectedId ? "incident-card-selected" : ""} ${
-              !isOpen ? "incident-card-resolved" : ""
-            }`}
-            onClick={() => onSelect(incident.incident_id)}
-          >
-            <div className="incident-card-top">
-              <PriorityDot affectedPoles={incident.affected_pole_count} />
-              <span className="mono incident-card-id">{incident.incident_id}</span>
-              <StatusBadge status={incident.status} />
-            </div>
+    <>
+      <div className="incident-list-header">
+        <span className="incident-list-title">Incidents</span>
+        <span className="incident-list-count">
+          {openCount > 0 ? (
+            <span style={{ color: "var(--critical)", fontWeight: 700 }}>
+              {openCount} open
+            </span>
+          ) : (
+            `${sorted.length} total`
+          )}
+        </span>
+      </div>
 
-            <div className="incident-card-mid">
-              <FaultTypeBadge type={incident.fault_type} />
-              <span className="text-muted">
-                {incident.start_pole ? `${incident.start_pole} → ${incident.end_pole}` : incident.end_pole}
-              </span>
-            </div>
+      <div className="incident-list">
+        {sorted.map((incident) => {
+          const isOpen = OPEN_STATUSES.has(incident.status);
+          return (
+            <button
+              key={incident.incident_id}
+              className={[
+                "incident-card",
+                incident.incident_id === selectedId ? "incident-card-selected" : "",
+                !isOpen ? "incident-card-resolved" : "",
+              ].join(" ")}
+              onClick={() => onSelect(incident.incident_id)}
+            >
+              <div className="incident-card-top">
+                <PriorityDot affectedPoles={incident.affected_pole_count} />
+                <span className="mono incident-card-id">{incident.incident_id}</span>
+                <StatusBadge status={incident.status} />
+              </div>
 
-            <div className="incident-card-bottom">
-              <span className="mono text-muted">
-                {incident.affected_pole_count} pole{incident.affected_pole_count === 1 ? "" : "s"} · {incident.transformer_id} · {incident.feeder_id}
-              </span>
-              <ConfidenceMeter value={incident.confidence} />
-            </div>
-            <div className="incident-card-footer">
-  <span className="view-details">
-    View Details →
-  </span>
+              <div className="incident-card-mid">
+                <FaultTypeBadge type={incident.fault_type} />
+                <span className="text-faint" style={{ fontSize: 12 }}>
+                  {incident.start_pole
+                    ? `${incident.start_pole} → ${incident.end_pole}`
+                    : incident.end_pole}
+                </span>
+              </div>
 
-  {incident.ai_summary ? (
-    <span className="ai-chip">
-      AI Analysis ✓
-    </span>
-  ) : (
-    <span className="ai-chip pending">
-      Explain with AI
-    </span>
-  )}
-</div>
-          </button>
-        );
-      })}
-    </div>
+              <div className="incident-card-bottom">
+                <span className="mono text-faint">
+                  {incident.affected_pole_count} pole{incident.affected_pole_count === 1 ? "" : "s"}{" "}
+                  · {incident.transformer_id}
+                  {incident.pincode ? ` · ${incident.pincode}` : ""}
+                </span>
+                <ConfidenceMeter value={incident.confidence} />
+              </div>
+
+              <div className="incident-card-footer">
+                <span className="view-details">View details →</span>
+                {incident.ai_summary ? (
+                  <span className="ai-chip">AI ✓</span>
+                ) : (
+                  <span className="ai-chip pending">Explain</span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }

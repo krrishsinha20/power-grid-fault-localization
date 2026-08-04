@@ -73,6 +73,8 @@ class LocalizationService:
         outage_service = OutageService(self.db)
 
         incidents = []
+        self.suppressed_count = 0
+        self.suppressed_outages = []
 
         for boundary in boundaries:
 
@@ -89,6 +91,8 @@ class LocalizationService:
 
             # Planned outage -> Ignore
             if active_outage is not None:
+                self.suppressed_count += 1
+                self.suppressed_outages.append(active_outage)
                 continue
 
             downstream = counter.count(

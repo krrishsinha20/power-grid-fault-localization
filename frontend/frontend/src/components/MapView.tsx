@@ -8,19 +8,20 @@ interface Props {
   lookup: PoleLookup;
   selectedId: string | null;
   onSelect: (incidentId: string) => void;
+  openIncidentCount: number;
 }
 
 const OPEN_STATUSES = new Set(["DETECTED", "ACKNOWLEDGED", "ASSIGNED", "IN_PROGRESS"]);
 
 const faultColor: Record<string, string> = {
-  SPAN_FAULT: "#f5a524",
+  SPAN_FAULT:        "#f5a524",
   TRANSFORMER_FAULT: "#f0453a",
-  FEEDER_FAULT: "#f0453a",
-  SENSOR_FAILURE: "#5b8def",
-  UNKNOWN: "#8b93a1",
+  FEEDER_FAULT:      "#f0453a",
+  SENSOR_FAILURE:    "#5b8def",
+  UNKNOWN:           "#8b93a1",
 };
 
-// Bangalore -- matches the assignment's own example coordinates
+// Bangalore — matches the assignment's own example coordinates
 // (00-candidate-brief.md: "12.9682° N 77.5946° E, PIN 560078") and
 // network_generator.py's base_lat/base_lon.
 const DEFAULT_CENTER: [number, number] = [12.9716, 77.5946];
@@ -49,22 +50,8 @@ function MapResizeHandler() {
 
 /**
  * Recenters the map the first time real incident coordinates arrive,
- * without remounting <MapContainer>. IMPORTANT: this deliberately
- * does NOT use a `key` prop to force a remount on data changes --
- * react-leaflet's MapContainer does not tolerate being torn down and
- * recreated cleanly under React 18 StrictMode's dev-mode double-
- * invoke of effects, which produced a corrupted/duplicated map DOM.
- * Calling map.setView() imperatively avoids that entirely -- one
- * real Leaflet instance for the lifetime of this component, moved
- * rather than recreated.
- *
- * NOTE: an earlier version of this file also had a manual
- * `map.remove()` cleanup-on-unmount helper, added to fight a stale
- * dev-session map-stacking symptom. That was wrong: react-leaflet's
- * <MapContainer> already calls map.remove() itself on unmount, so
- * the extra manual call removed an already-removed map instance and
- * threw, crashing the whole app to a black screen. Removed --
- * <MapContainer>'s own lifecycle handling is sufficient.
+ * without remounting <MapContainer>. See detailed comment on the
+ * original about why we use setView() imperatively instead of a key.
  */
 function MapRecenter({ center, enabled }: { center: [number, number]; enabled: boolean }) {
   const map = useMap();
@@ -80,7 +67,7 @@ function MapRecenter({ center, enabled }: { center: [number, number]; enabled: b
   return null;
 }
 
-export function MapView({ incidents, lookup, selectedId, onSelect }: Props) {
+export function MapView({ incidents, lookup, selectedId, onSelect, openIncidentCount }: Props) {
   const points = useMemo(() => {
     return incidents
       .map((incident) => {
@@ -96,14 +83,24 @@ export function MapView({ incidents, lookup, selectedId, onSelect }: Props) {
   const firstPointCenter: [number, number] | null =
     points.length > 0 ? [points[0].lat, points[0].lon] : null;
 
+  const isHealthy = openIncidentCount === 0;
+
   if (points.length === 0 && incidents.length > 0) {
     return (
-      <div className="map-fallback">
-        <p>Coordinates unavailable for current incidents.</p>
-        <p className="text-muted">
-          The pole registry hasn't loaded yet, or these poles aren't in it. See the incident list for
-          full detail in the meantime.
-        </p>
+      <div className="map-wrapper">
+        <div className="map-fallback">
+          <p>Coordinates unavailable for current incidents.</p>
+          <p className="text-muted">
+            The pole registry hasn't loaded yet, or these poles aren't in it. See the incident list
+            for full detail in the meantime.
+          </p>
+        </div>
+
+        {/* Still show the badge even without map points */}
+        <div className={`map-fault-badge${isHealthy ? " map-fault-healthy" : ""}`}>
+          <span className="map-fault-badge-dot" />
+          {isHealthy ? "Grid healthy" : `${openIncidentCount} active fault${openIncidentCount > 1 ? "s" : ""}`}
+        </div>
       </div>
     );
   }
@@ -125,11 +122,11 @@ export function MapView({ incidents, lookup, selectedId, onSelect }: Props) {
             <CircleMarker
               key={incident.incident_id}
               center={[lat, lon]}
-              radius={isSelected ? 12 : 8}
+              radius={isSelected ? 13 : 8}
               pathOptions={{
                 color,
                 fillColor: color,
-                fillOpacity: isOpen ? 0.85 : 0.25,
+                fillOpacity: isOpen ? 0.88 : 0.22,
                 weight: isSelected ? 3 : 1.5,
                 opacity: isOpen ? 1 : 0.4,
               }}
@@ -140,12 +137,21 @@ export function MapView({ incidents, lookup, selectedId, onSelect }: Props) {
                   <strong>{incident.incident_id}</strong>
                   <br />
                   {incident.fault_type} · {incident.affected_pole_count} poles
+                  {incident.pincode ? ` · PIN ${incident.pincode}` : ""}
                 </div>
               </Tooltip>
             </CircleMarker>
           );
         })}
       </MapContainer>
+
+      {/* Fault count annunciator badge — always visible over the map */}
+      <div className={`map-fault-badge${isHealthy ? " map-fault-healthy" : ""}`}>
+        <span className="map-fault-badge-dot" />
+        {isHealthy
+          ? "Grid healthy"
+          : `${openIncidentCount} active fault${openIncidentCount > 1 ? "s" : ""}`}
+      </div>
     </div>
   );
 }

@@ -1,95 +1,136 @@
 /* ============================================================
    Design tokens — KSPDB Fault Console
-   Aesthetic: a night-shift SCADA/control-room panel, not a
-   marketing dashboard. Dense, legible at a glance, alarms read
-   as alarms. IBM Plex Mono carries every identifier and number
-   (pole IDs, coordinates, timestamps) so the eye can scan fixed-
-   width columns the way an operator scans a real annunciator
-   panel; Inter carries prose and labels.
+   Aesthetic: night-shift SCADA/control-room panel. Dense,
+   legible at a glance, alarms read as alarms. Premium
+   glassmorphism over a deep dark shell.
+   IBM Plex Mono carries identifiers and numbers;
+   Inter carries prose and labels.
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
 :root {
-  --bg: #0a0c10;
-  --panel: #12161d;
-  --panel-raised: #171c25;
-  --border: #232a35;
-  --border-soft: #1b212a;
+  /* ---- Base surfaces ---- */
+  --bg:            #060810;
+  --bg-grid:       radial-gradient(ellipse at 20% 50%, rgba(34,211,238,0.03) 0%, transparent 60%),
+                   radial-gradient(ellipse at 80% 20%, rgba(91,141,239,0.04) 0%, transparent 50%);
+  --panel:         rgba(14, 18, 28, 0.85);
+  --panel-raised:  rgba(20, 26, 40, 0.9);
+  --panel-glass:   rgba(16, 22, 36, 0.7);
+  --panel-border:  rgba(255,255,255,0.06);
 
-  --text: #e7ebf1;
-  --text-muted: #8b93a1;
-  --text-faint: #576273;
+  --border:        #1e2636;
+  --border-soft:   #161e2c;
+  --border-accent: rgba(34,211,238,0.25);
 
-  --critical: #f0453a;
-  --critical-bg: rgba(240, 69, 58, 0.12);
-  --high: #f5a524;
-  --high-bg: rgba(245, 165, 36, 0.12);
-  --medium: #f5d90a;
-  --medium-bg: rgba(245, 217, 10, 0.1);
-  --low: #5b8def;
-  --low-bg: rgba(91, 141, 239, 0.1);
+  /* ---- Text ---- */
+  --text:          #edf0f7;
+  --text-muted:    #8b93a1;
+  --text-faint:    #4a5568;
 
-  --healthy: #22c55e;
-  --healthy-bg: rgba(34, 197, 94, 0.12);
+  /* ---- Semantic colours ---- */
+  --critical:      #f0453a;
+  --critical-bg:   rgba(240, 69, 58, 0.10);
+  --critical-glow: rgba(240, 69, 58, 0.30);
 
-  --accent: #22d3ee;
-  --accent-bg: rgba(34, 211, 238, 0.1);
+  --high:          #f5a524;
+  --high-bg:       rgba(245, 165, 36, 0.10);
 
-  --radius: 6px;
-  --font-ui: "Inter", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --medium:        #ecc94b;
+  --medium-bg:     rgba(236, 201, 75, 0.10);
+
+  --low:           #5b8def;
+  --low-bg:        rgba(91, 141, 239, 0.10);
+
+  --healthy:       #22c55e;
+  --healthy-bg:    rgba(34, 197, 94, 0.10);
+  --healthy-glow:  rgba(34, 197, 94, 0.25);
+
+  --accent:        #22d3ee;
+  --accent-dim:    rgba(34, 211, 238, 0.18);
+  --accent-bg:     rgba(34, 211, 238, 0.08);
+  --accent-glow:   rgba(34, 211, 238, 0.35);
+
+  /* ---- UI ---- */
+  --radius:        8px;
+  --radius-lg:     14px;
+  --radius-xl:     20px;
+
+  --font-ui:       "Inter", system-ui, sans-serif;
+  --font-mono:     "IBM Plex Mono", "SFMono-Regular", monospace;
+
+  --shadow-panel:  0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-card:   0 4px 16px rgba(0,0,0,0.4);
+  --shadow-glow:   0 0 20px var(--accent-glow);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-}
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; }
 
 body {
   margin: 0;
   background: var(--bg);
+  background-image: var(--bg-grid);
   color: var(--text);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-button {
-  font-family: inherit;
+button { font-family: inherit; }
+
+::selection { background: var(--accent-bg); color: var(--text); }
+
+/* ---- Scrollbars ---- */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Utilities ---- */
+.mono { font-family: var(--font-mono); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Keyframes ---- */
+@keyframes pulse-critical {
+  0%   { box-shadow: 0 0 0 0 var(--critical-glow); }
+  70%  { box-shadow: 0 0 0 10px rgba(240,69,58,0); }
+  100% { box-shadow: 0 0 0 0 rgba(240,69,58,0); }
 }
 
-::selection {
-  background: var(--accent-bg);
+@keyframes pulse-healthy {
+  0%   { box-shadow: 0 0 0 0 var(--healthy-glow); }
+  70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 }
 
-/* Scrollbars — thin, dark, unobtrusive */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-.mono {
-  font-family: var(--font-mono);
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-a {
-  color: var(--accent);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
 }
 
 @media (prefers-reduced-motion: reduce) {

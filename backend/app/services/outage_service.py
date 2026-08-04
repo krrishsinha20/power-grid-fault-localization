@@ -48,17 +48,25 @@ class OutageService:
         # get suppressed as "within" a scheduled outage window that has
         # already ended, or a genuinely suppressed outage could leak
         # through as a fault. Must be utcnow() to match everything else.
-        at = at or datetime.utcnow()
+        at_utc = at or datetime.utcnow()
+        at_local = at or datetime.now()
 
         outages = self._get_active_outages()
 
         for outage in outages:
+            # Handle naive vs aware start/end times
+            start_t = outage.start_time.replace(tzinfo=None) if outage.start_time and outage.start_time.tzinfo else outage.start_time
+            end_t = outage.end_time.replace(tzinfo=None) if outage.end_time and outage.end_time.tzinfo else outage.end_time
 
-            start = outage.start_time - START_GRACE
-            end = outage.end_time + END_GRACE
+            if not start_t or not end_t:
+                continue
 
-            # Skip if current time is outside outage window
-            if not (start <= at <= end):
+            start = start_t - START_GRACE
+            end = end_t + END_GRACE
+
+            # Check both UTC and local time match so regardless of whether start/end
+            # were saved in UTC or local server time, planned outages match correctly.
+            if not (start <= at_utc <= end or start <= at_local <= end):
                 continue
 
             # Transformer-specific planned outage
@@ -82,9 +90,8 @@ class OutageService:
         Cached per OutageService instance. LocalizationService creates
         one OutageService per `process()` call and checks every
         boundary against it in the same request -- without this cache
-        we'd re-run the same "status == ACTIVE" query once per
-        boundary, which adds up during a storm with dozens of
-        simultaneous faults.
+        we'd re-run the same query once per boundary.
+        Includes all active or scheduled outages (excluding cancelled/completed).
         """
 
         if self._active_outages_cache is None:
@@ -92,7 +99,7 @@ class OutageService:
             self._active_outages_cache = (
                 self.db.query(ScheduledOutage)
                 .filter(
-                    ScheduledOutage.status == "ACTIVE"
+                    ScheduledOutage.status.notin_(["CANCELLED", "COMPLETED"])
                 )
                 .all()
             )
