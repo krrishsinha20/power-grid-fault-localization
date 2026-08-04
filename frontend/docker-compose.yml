@@ -1,0 +1,69 @@
+# Brings up the entire stack with one command:
+#   docker compose up
+#
+# Assumes this layout at the repo root (flatten the backend zip by
+# one level if yours currently has backend/backend/... — the actual
+# project root, containing Dockerfile/requirements.txt/app/, should
+# sit directly at ./backend):
+#
+#   .
+#   ├── docker-compose.yml   (this file)
+#   ├── .env                 (copy from .env.example)
+#   ├── backend/
+#   │   ├── Dockerfile
+#   │   ├── requirements.txt
+#   │   └── app/
+#   └── frontend/
+#       ├── Dockerfile
+#       ├── package.json
+#       └── src/
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hellosql
+      POSTGRES_DB: power_grid_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:hellosql@db:5432/power_grid_db
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      SQL_ECHO: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the frontend bundle at build time (Vite only
+        # reads VITE_* vars at build, not at container runtime).
+        # Override in .env if the backend is reachable at a
+        # different host/port for your deployment.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
