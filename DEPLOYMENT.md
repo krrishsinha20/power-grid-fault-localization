@@ -136,7 +136,7 @@ The live production application is deployed on [Railway](https://railway.app) in
        - `PORT`: `8000`
    - **`frontend`**: Deployed from `./frontend/frontend` context.
      - Environment Variables:
-       - `VITE_API_BASE_URL`: Railway Backend Service URL (`https://backend-production-xxxx.up.railway.app`)
+       - `VITE_API_BASE_URL`: Railway Backend Service URL (`https://power-grid-fault-localization-production.up.railway.app`)
 
 2. **Network Routing**:
    - Public domains are generated for `frontend` and `backend`.

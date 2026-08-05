@@ -15,8 +15,8 @@ docker compose up --build
 
 ## Live Deployment
 
-- **Live Frontend Application**: [LIVE_URL] *(e.g. https://frontend-production-xxxx.up.railway.app)*
-- **Live Backend OpenAPI Docs**: [LIVE_URL]/docs *(e.g. https://backend-production-xxxx.up.railway.app/docs)*
+- **Live Frontend Application**: https://hearty-spirit-production-7a5f.up.railway.app/
+- **Live Backend OpenAPI Docs**: https://power-grid-fault-localization-production.up.railway.app/docs
 
 ## Demonstration Video
 
