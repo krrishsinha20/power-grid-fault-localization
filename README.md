@@ -17,10 +17,12 @@ If you want to explore and test the system immediately without running it locall
 
 ## Quick Start (Clone & Run)
 
-Run this single command in your terminal to clone the repository, enter the directory, and bring up the entire system via Docker Compose:
+Run these commands in your terminal to clone the repository, enter the directory, and bring up the entire system via Docker Compose:
 
 ```bash
-git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization && docker compose up --build
+git clone https://github.com/krrishsinha20/power-grid-fault-localization.git
+cd power-grid-fault-localization
+docker compose up --build
 ```
 
 Once database initialization and seeding finish, your terminal will output:

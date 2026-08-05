@@ -36,7 +36,10 @@ First boot seeds the database automatically (see backend logs).
 notes):
 ```bash
 cd backend
-python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
+python -m venv venv
+# Linux/macOS: source venv/bin/activate
+# Windows PowerShell: .\venv\Scripts\Activate.ps1
+# Windows CMD: venv\Scripts\activate.bat
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
