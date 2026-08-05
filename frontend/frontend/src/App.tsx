@@ -61,7 +61,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-title">
           <span className="app-title-main">FLASH</span>
-          <span className="app-title-sub">Fault Localization Console</span>
+          <span className="app-title-sub">Power Grid Fault Localization System</span>
         </div>
 
         <nav className="app-tabs">
