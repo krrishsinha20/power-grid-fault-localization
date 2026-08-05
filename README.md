@@ -15,14 +15,10 @@ If you want to explore and test the system immediately without running it locall
 
 ## Quick Start (Clone & Run)
 
-Follow these simple commands line-by-line in your terminal:
+Run this single command in your terminal to clone the repository, enter the directory, and bring up the entire system via Docker Compose:
 
 ```bash
-# 1. Clone repository & enter the project folder
-git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization
-
-# 2. Build and launch all services (PostgreSQL, FastAPI Backend, Vite Frontend)
-docker compose up --build
+git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization && docker compose up --build
 ```
 
 Once database initialization and seeding finish, your terminal will output:
