@@ -15,17 +15,32 @@ If you want to explore and test the system immediately without running it locall
 
 ## ⚡ Quick Start (Clone & Run)
 
-Run this single chained command in your terminal to clone the repository, enter the directory, and start all services via Docker Compose:
+Follow these simple commands line-by-line in your terminal:
 
 ```bash
-git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization && docker compose up --build
+# 1. Clone repository & enter the project folder
+git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization
+
+# 2. Build and launch all services (PostgreSQL, FastAPI Backend, Vite Frontend)
+docker compose up --build
+```
+
+Once database initialization and seeding finish, your terminal will output:
+
+```text
+================================================================
+  FLASH — Power Grid Fault Localization System Ready!
+  • Frontend Operator Console : http://localhost:5173
+  • Backend OpenAPI Docs      : http://localhost:8000/docs
+  • Backend API Base URL      : http://localhost:8000
+================================================================
 ```
 
 ### Local Service Endpoints
-Once startup and database seeding complete, access the local services:
-- **Frontend Operator Console**: [http://localhost:5173](http://localhost:5173)
-- **Backend OpenAPI Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Backend Base API**: [http://localhost:8000](http://localhost:8000)
+Click on the URLs printed in your terminal or open them in your browser:
+- 🖥️ **Frontend Operator Console**: [http://localhost:5173](http://localhost:5173)
+- ⚙️ **Backend OpenAPI Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- 🔌 **Backend Base API**: [http://localhost:8000](http://localhost:8000)
 
 ---
 
