@@ -60,7 +60,7 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-title">
-          <span className="app-title-main">KSPDB</span>
+          <span className="app-title-main">Karnataka State Power Distribution Board</span>
           <span className="app-title-sub">Fault Localization Console</span>
         </div>
 

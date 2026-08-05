@@ -41,8 +41,8 @@
 .app-title-main {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 17px;
-  letter-spacing: 2px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
   background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
