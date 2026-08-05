@@ -19,20 +19,27 @@ class RepairSimulator:
         self.db = db
 
     def restore_span_fault(self, pole_ids: list[str]):
+        from app.localization.graph_builder import GraphBuilder
+        from app.localization.topology_inference import TopologyInference
+        import networkx as nx
+
+        graph = GraphBuilder(self.db).build()
+        TopologyInference(graph).infer()
+
+        all_to_restore = set(pole_ids)
+        for pid in pole_ids:
+            if pid in graph:
+                all_to_restore.update(nx.descendants(graph, pid))
 
         telemetry_events = []
 
-        for pole_id in pole_ids:
+        poles = (
+            self.db.query(Pole)
+            .filter(Pole.pole_id.in_(all_to_restore))
+            .all()
+        )
 
-            pole = (
-                self.db.query(Pole)
-                .filter(Pole.pole_id == pole_id)
-                .first()
-            )
-
-            if pole is None:
-                continue
-
+        for pole in poles:
             telemetry_events.append(
                 self._apply_restore(pole)
             )

@@ -19,9 +19,11 @@ class FaultInjector:
 
     def inject_span_fault(self, pole_ids: list[str]):
         from app.localization.graph_builder import GraphBuilder
+        from app.localization.topology_inference import TopologyInference
         import networkx as nx
 
         graph = GraphBuilder(self.db).build()
+        TopologyInference(graph).infer()
 
         all_affected = set(pole_ids)
         for pid in pole_ids:

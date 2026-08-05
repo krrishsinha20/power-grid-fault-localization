@@ -176,7 +176,30 @@ class LocalizationService:
 
             )
 
-        return self._merge_feeder_wide_faults(graph, incidents)
+        # Deduplicate overlapping sub-boundaries: sort by largest affected area first.
+        # If a smaller boundary's affected poles are >50% contained within a larger
+        # boundary's affected poles, drop the smaller redundant boundary.
+        deduped = []
+        seen_poles_in_run = set()
+
+        sorted_incidents = sorted(
+            incidents, key=lambda x: x["affected_poles"], reverse=True
+        )
+
+        for inc in sorted_incidents:
+            affected = set(inc["affected_pole_ids"])
+            if not affected:
+                deduped.append(inc)
+                continue
+
+            overlap = affected.intersection(seen_poles_in_run)
+            if len(overlap) > 0 and len(overlap) >= len(affected) * 0.5:
+                continue
+
+            seen_poles_in_run.update(affected)
+            deduped.append(inc)
+
+        return self._merge_feeder_wide_faults(graph, deduped)
 
     def _merge_feeder_wide_faults(self, graph, incidents):
         """

@@ -63,12 +63,19 @@ def ingest_telemetry(
 
             ticket_service = TicketService(db)
 
+            seen_end_poles: set = set()
+
             for result in incidents:
+                end_pole = result["end_pole"]
+                if end_pole in seen_end_poles:
+                    continue
+                seen_end_poles.add(end_pole)
+
                 # Idempotency check: don't create duplicate incident if active incident already exists for this end_pole
                 existing = (
                     db.query(Incident)
                     .filter(
-                        Incident.end_pole == result["end_pole"],
+                        Incident.end_pole == end_pole,
                         Incident.status.notin_(["VERIFIED", "CLOSED"])
                     )
                     .first()
