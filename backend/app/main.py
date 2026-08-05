@@ -17,7 +17,7 @@ from app.api.dashboard import router as dashboard_router
 from app.api.poles import router as poles_router
 from app.api.scheduled_outage import router as scheduled_outage_router
 
-app = FastAPI(title="AI Power Grid Fault Localization", version="1.0.0")
+app = FastAPI(title="Power Grid Fault Localization System", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,

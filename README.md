@@ -1,6 +1,6 @@
-# AI Power Grid Fault Localization System
+# Power Grid Fault Localization System
 
-A real-time power grid monitoring and automated fault localization system designed for distribution networks. The system ingests high-frequency telemetry from grid sensors, builds a dynamic topology tree, accurately localizes physical line and transformer failures to single boundaries, suppresses noise and scheduled outages, auto-generates tickets, and provides AI-powered root-cause explanations on demand.
+A real-time power grid fault localization system where deterministic graph algorithms identify fault boundaries while an LLM generates human-readable root-cause analysis and recommended actions. The system ingests high-frequency telemetry from grid sensors, builds a dynamic topology tree, accurately localizes physical line and transformer failures to single boundaries, suppresses noise and scheduled outages, auto-generates tickets, and provides AI-powered root-cause explanations on demand.
 
 ## One-Command Start
 
