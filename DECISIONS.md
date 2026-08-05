@@ -6,6 +6,28 @@ This document logs significant architectural choices, bug resolutions, technical
 
 ## Technical Decision & Bug Fix Log
 
+### [2026-08-05] ADR-008: Real-Time Updates via Polling (Not WebSockets)
+- **Status**: Accepted & Implemented
+- **Decision**: The frontend operator console uses HTTP polling (every 5 seconds) to fetch updated incident, ticket, and dashboard data — not WebSockets or Server-Sent Events.
+- **Rationale**: WebSockets require a persistent connection upgrade that is frequently broken by reverse proxies and PaaS platforms (Railway, Render, Heroku) without explicit configuration. A WebSocket that works locally but silently drops on the deployed URL is worse than polling. Polling at a 5-second interval is sufficient for the control room use case — a fault localized 5 seconds after detection is still orders of magnitude faster than the current 2-hour baseline. The tradeoff (slightly higher server request rate, no sub-second push) is acceptable for this problem.
+
+### [2026-08-05] ADR-007: Third-Party Libraries & Tools Used
+- **Status**: Accepted & Implemented
+- **Backend**:
+  - `FastAPI` — async Python web framework for API layer
+  - `SQLAlchemy` (ORM) + `PostgreSQL` — relational persistence
+  - `NetworkX` — in-memory directed graph for topology and localization traversal
+  - `LangChain` + `langchain-groq` — LLM integration for AI root-cause explanation
+  - `psycopg2` — PostgreSQL adapter
+  - `pytest` — unit test runner for localization, classifier, and ticket flow tests
+- **Frontend**:
+  - `React` + `Vite` — UI framework and build tool
+  - `Leaflet` (via `react-leaflet`) — GIS map rendering for pole and incident visualization
+  - `Axios` — HTTP client for API requests
+- **Infrastructure**:
+  - `Docker` + `Docker Compose` — containerized local development and deployment
+  - `Railway` — cloud PaaS for production deployment
+
 ### [2026-08-04] ADR-006: PIN Code & Coordinates Alignment (Bangalore 560001)
 - **Status**: Resolved & Verified
 - **Context**: Previously `backend/app/utils/constants.py` set `DEFAULT_PINCODE = "411001"` (Pune), while grid coordinates were centered around `12.9716, 77.5946` (Bangalore).
