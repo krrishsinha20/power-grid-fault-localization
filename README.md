@@ -4,16 +4,16 @@ A real-time power grid fault localization system where deterministic graph algor
 
 ---
 
-## 🌐 Live Deployment
+## Live Deployment
 
 If you want to explore and test the system immediately without running it locally, use the live deployed links:
 
-- 🖥️ **Live Frontend Operator Console**: [https://hearty-spirit-production-7a5f.up.railway.app/](https://hearty-spirit-production-7a5f.up.railway.app/)
-- ⚙️ **Live Backend OpenAPI Docs**: [https://power-grid-fault-localization-production.up.railway.app/docs](https://power-grid-fault-localization-production.up.railway.app/docs)
+- **Live Frontend Operator Console**: [https://hearty-spirit-production-7a5f.up.railway.app/](https://hearty-spirit-production-7a5f.up.railway.app/)
+- **Live Backend OpenAPI Docs**: [https://power-grid-fault-localization-production.up.railway.app/docs](https://power-grid-fault-localization-production.up.railway.app/docs)
 
 ---
 
-## ⚡ Quick Start (Clone & Run)
+## Quick Start (Clone & Run)
 
 Follow these simple commands line-by-line in your terminal:
 
@@ -38,13 +38,13 @@ Once database initialization and seeding finish, your terminal will output:
 
 ### Local Service Endpoints
 Click on the URLs printed in your terminal or open them in your browser:
-- 🖥️ **Frontend Operator Console**: [http://localhost:5173](http://localhost:5173)
-- ⚙️ **Backend OpenAPI Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- 🔌 **Backend Base API**: [http://localhost:8000](http://localhost:8000)
+- **Frontend Operator Console**: [http://localhost:5173](http://localhost:5173)
+- **Backend OpenAPI Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Backend Base API**: [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## 🔑 LLM API Key Configuration (Optional)
+## LLM API Key Configuration (Optional)
 
 The system includes an AI-powered **Root Cause Analysis & Action Recommendation** module using LLM capabilities (Groq API).
 
@@ -63,14 +63,14 @@ The system includes an AI-powered **Root Cause Analysis & Action Recommendation*
 
 ---
 
-## 🎥 Demonstration Video
+## Demonstration Video
 
 [![System Walkthrough Demo](https://img.youtube.com/vi/DEMO_VIDEO_ID/maxresdefault.jpg)](DEMO_VIDEO_URL)  
 *(Watch full feature demonstration video: [DEMO_VIDEO_URL])*
 
 ---
 
-## 📚 Documentation Map
+## Documentation Map
 
 - **[ARCHITECTURE.md](file:///c:/Users/KRRISH/Desktop/Propel/ARCHITECTURE.md)**: Deep dive into the data ingestion pipeline, graph-based topology engine, boundary detection algorithm, missing-topology inference, noise suppression, API specifications, UI UX choices, and AI cost/degradation model.
 - **[DEPLOYMENT.md](file:///c:/Users/KRRISH/Desktop/Propel/DEPLOYMENT.md)**: Local Docker Compose setup guide, environment configuration, system verification steps, Railway cloud deployment notes, and a detailed troubleshooting matrix for bugs encountered during development.
