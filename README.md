@@ -4,13 +4,15 @@ A real-time power grid fault localization system where deterministic graph algor
 
 ## Quick Start (Clone & Run)
 
-If you have opened this repository folder in VS Code or your terminal:
+To clone directly into your current working directory in VS Code and launch:
 
 ```bash
+# 1. Clone all files directly into the current open folder
+git clone https://github.com/krrishsinha20/power-grid-fault-localization.git .
+
+# 2. Launch the entire stack (PostgreSQL, FastAPI Backend, React Frontend)
 docker compose up --build
 ```
-
-*(Or from a fresh terminal, clone and enter the directory in one line: `git clone https://github.com/krrishsinha20/power-grid-fault-localization.git && cd power-grid-fault-localization`)*
 
 Once initialization finishes and database seeding completes, your terminal will display:
 
