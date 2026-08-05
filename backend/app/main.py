@@ -36,6 +36,12 @@ def on_startup():
     finally:
         db.close()
     asyncio.create_task(heartbeat_loop())
+    print("\n" + "=" * 64, flush=True)
+    print("  FLASH — Power Grid Fault Localization System Ready!", flush=True)
+    print("  • Frontend Operator Console : http://localhost:5173", flush=True)
+    print("  • Backend OpenAPI Docs      : http://localhost:8000/docs", flush=True)
+    print("  • Backend API Base URL      : http://localhost:8000", flush=True)
+    print("=" * 64 + "\n", flush=True)
 
 app.include_router(telemetry_router)
 app.include_router(simulator_router)
