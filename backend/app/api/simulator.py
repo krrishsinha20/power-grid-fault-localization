@@ -366,7 +366,7 @@ def simulate_sensor_failure(
 
         noise.simulate_dead_sensor(request.pole_id)
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, _ = _run_localization_pipeline(db)
 
         db.commit()
 
@@ -412,7 +412,7 @@ def simulate_duplicate_telemetry(
             repeat=request.repeat_count
         )
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, _ = _run_localization_pipeline(db)
 
         db.commit()
 
@@ -455,7 +455,7 @@ def simulate_out_of_order_telemetry(
 
         noise.simulate_out_of_order(request.pole_id)
 
-        created_incidents = _run_localization_pipeline(db)
+        created_incidents, _ = _run_localization_pipeline(db)
 
         db.commit()
 

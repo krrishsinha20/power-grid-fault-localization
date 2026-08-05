@@ -130,10 +130,14 @@ class LocalizationService:
             if (
                 downstream["count"] == 1
                 and boundary["parent"] is not None
-                and not downstream["reconnect_poles"]
+                and downstream["reconnect_poles"]
             ):
+                # Single dark pole with live children: physically impossible
+                # as a line fault (radial network). The sensor is lying.
                 fault_type = "SENSOR_FAILURE"
-            elif downstream["reconnect_poles"]:
+            elif downstream["reconnect_poles"] and downstream["count"] > 1:
+                # Multi-pole dark region but live poles appear mid-branch:
+                # sensor anomaly on an intermediate pole, not a clean outage.
                 fault_type = "SENSOR_FAILURE"
 
             incidents.append(

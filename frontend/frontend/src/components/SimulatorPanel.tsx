@@ -66,11 +66,13 @@ export function SimulatorPanel({ onAction }: Props) {
   const poleOptions = poleIds.map(p => ({ value: p }));
 
   // Form state
-  const [spanPoles,      setSpanPoles]      = useState("");   // comma/space list
-  const [transformerId,  setTransformerId]  = useState("");
-  const [feederId,       setFeederId]       = useState("F001");
-  const [singlePoleId,   setSinglePoleId]   = useState("");
-  const [repeatCount,    setRepeatCount]    = useState(5);
+  const [spanPoles,        setSpanPoles]        = useState("");   // comma/space list
+  const [transformerId,    setTransformerId]    = useState("");
+  const [feederId,         setFeederId]         = useState("F001");
+  const [deadSensorPoleId, setDeadSensorPoleId] = useState("");
+  const [dupPoleId,        setDupPoleId]        = useState("");
+  const [ooPoleId,         setOoPoleId]         = useState("");
+  const [repeatCount,      setRepeatCount]      = useState(5);
 
   function parsePoleIds(input: string): string[] {
     return input.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
@@ -292,19 +294,19 @@ export function SimulatorPanel({ onAction }: Props) {
             Pole ID
             {hasPoles ? (
               <GlassSelect
-                value={singlePoleId}
+                value={deadSensorPoleId}
                 options={poleOptions}
-                onChange={setSinglePoleId}
+                onChange={setDeadSensorPoleId}
                 placeholder="— select pole —"
                 disabled={busy}
               />
             ) : (
-              <input className="sim-input mono" value={singlePoleId}
-                onChange={e => setSinglePoleId(e.target.value)} placeholder="P00045" />
+              <input className="sim-input mono" value={deadSensorPoleId}
+                onChange={e => setDeadSensorPoleId(e.target.value)} placeholder="P00045" />
             )}
           </label>
-          <button className="btn-secondary" disabled={busy || !singlePoleId}
-            onClick={() => run("Sensor failure", () => api.simulateSensorFailure(singlePoleId))}>
+          <button className="btn-secondary" disabled={busy || !deadSensorPoleId}
+            onClick={() => run("Sensor failure", () => api.simulateSensorFailure(deadSensorPoleId))}>
             Kill sensor (power stays on)
           </button>
         </SimCard>
@@ -319,15 +321,15 @@ export function SimulatorPanel({ onAction }: Props) {
             Pole ID
             {hasPoles ? (
               <GlassSelect
-                value={singlePoleId}
+                value={dupPoleId}
                 options={poleOptions}
-                onChange={setSinglePoleId}
+                onChange={setDupPoleId}
                 placeholder="— select pole —"
                 disabled={busy}
               />
             ) : (
-              <input className="sim-input mono" value={singlePoleId}
-                onChange={e => setSinglePoleId(e.target.value)} placeholder="P00045" />
+              <input className="sim-input mono" value={dupPoleId}
+                onChange={e => setDupPoleId(e.target.value)} placeholder="P00045" />
             )}
           </label>
           <label className="sim-label">
@@ -336,9 +338,9 @@ export function SimulatorPanel({ onAction }: Props) {
               value={repeatCount}
               onChange={e => setRepeatCount(Number(e.target.value))} />
           </label>
-          <button className="btn-secondary" disabled={busy || !singlePoleId}
+          <button className="btn-secondary" disabled={busy || !dupPoleId}
             onClick={() => run("Duplicate telemetry",
-              () => api.simulateDuplicateTelemetry(singlePoleId, repeatCount))}>
+              () => api.simulateDuplicateTelemetry(dupPoleId, repeatCount))}>
             Send duplicates
           </button>
         </SimCard>
@@ -353,20 +355,20 @@ export function SimulatorPanel({ onAction }: Props) {
             Pole ID
             {hasPoles ? (
               <GlassSelect
-                value={singlePoleId}
+                value={ooPoleId}
                 options={poleOptions}
-                onChange={setSinglePoleId}
+                onChange={setOoPoleId}
                 placeholder="— select pole —"
                 disabled={busy}
               />
             ) : (
-              <input className="sim-input mono" value={singlePoleId}
-                onChange={e => setSinglePoleId(e.target.value)} placeholder="P00045" />
+              <input className="sim-input mono" value={ooPoleId}
+                onChange={e => setOoPoleId(e.target.value)} placeholder="P00045" />
             )}
           </label>
-          <button className="btn-secondary" disabled={busy || !singlePoleId}
+          <button className="btn-secondary" disabled={busy || !ooPoleId}
             onClick={() => run("Out-of-order telemetry",
-              () => api.simulateOutOfOrder(singlePoleId))}>
+              () => api.simulateOutOfOrder(ooPoleId))}>
             Send out-of-order packets
           </button>
         </SimCard>

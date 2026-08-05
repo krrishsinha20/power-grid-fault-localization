@@ -126,10 +126,17 @@ The system evaluates incoming telemetry against four distinct noise categories t
 | `/tickets/{id}/close` | `POST` | `ticket_id` (path) | **Admin Override**: Forces ticket status to `CLOSED` without telemetry verification. |
 | `/telemetry` | `POST` | `TelemetryBatchSchema` | Ingests batch of sensor packets; runs localization engine. |
 | `/dashboard` | `GET` | None | Summary stats (total poles, live vs dark ratio, active incidents, open tickets). |
-| `/poles` | `GET` | `limit` (query) | Returns pole geojson/list for map rendering. |
+| `/poles` | `GET` | `limit` (query, default 500) | Returns pole list with coordinates for GIS map rendering. |
 | `/scheduled-outages` | `POST` | `OutageCreateSchema` | Registers a planned maintenance window on a feeder/transformer. |
-| `/simulate/span` | `POST` | `span_id`, `inject_noise` | Simulator: Injects a physical conductor fault or sensor failure. |
-| `/simulate/feeder` | `POST` | `feeder_id` | Simulator: Injects a feeder-wide blackout. |
+| `/simulate/network` | `POST` | `reset` (bool query) | Seeds the synthetic network; pass `?reset=true` to wipe and regenerate. |
+| `/simulate/span` | `POST` | `SpanFaultRequest` — `pole_ids: list[str]` | Marks a set of adjacent poles dark; runs localization pipeline. |
+| `/simulate/transformer` | `POST` | `TransformerFaultRequest` — `transformer_id: str` | Takes every pole under one DT dark; runs localization pipeline. |
+| `/simulate/feeder` | `POST` | `FeederFaultRequest` — `feeder_id: str` | Takes every transformer on a feeder dark; grouped into one FEEDER_FAULT ticket. |
+| `/simulate/repair` | `POST` | `RepairRequest` — `pole_ids: list[str]` | Re-energizes span poles; triggers telemetry-driven verification pipeline. |
+| `/simulate/repair/feeder` | `POST` | `FeederFaultRequest` — `feeder_id: str` | Re-energizes all poles on a feeder; triggers verification pipeline. |
+| `/simulate/noise/sensor-failure` | `POST` | `SensorFaultRequest` — `pole_id: str` | Kills a device while power stays on — must NOT produce an outage ticket. |
+| `/simulate/noise/duplicate-telemetry` | `POST` | `DuplicateTelemetryRequest` — `pole_id, repeat_count` | Resends same packet N times; exactly one state change must result. |
+| `/simulate/noise/out-of-order` | `POST` | `OutOfOrderTelemetryRequest` — `pole_id: str` | Sends a stale `power_restored` after a newer `power_lost`; stale must not win. |
 
 ---
 

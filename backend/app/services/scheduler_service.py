@@ -8,6 +8,7 @@ from app.services.localization_service import LocalizationService
 from app.services.classifier_service import ClassifierService
 from app.services.incident_service import IncidentService
 from app.services.ticket_service import TicketService
+from app.models.incident import Incident
 
 logger = logging.getLogger("scheduler")
 
@@ -44,6 +45,19 @@ def _run_tick():
             ticket_service = TicketService(db)
 
             for result in incidents_found:
+                # Idempotency: don't create a duplicate incident if an active
+                # one already exists for this end_pole (same guard as telemetry.py).
+                existing = (
+                    db.query(Incident)
+                    .filter(
+                        Incident.end_pole == result["end_pole"],
+                        Incident.status.notin_(["VERIFIED", "CLOSED"])
+                    )
+                    .first()
+                )
+                if existing:
+                    continue
+
                 if "fault_type" in result and result["fault_type"]:
                     fault_type = result["fault_type"]
                 else:
@@ -62,4 +76,4 @@ def _run_tick():
 
         db.commit()
     finally:
-        db.close()
+        db.close()
