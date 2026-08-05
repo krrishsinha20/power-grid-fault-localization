@@ -8,7 +8,7 @@ A real-time power grid fault localization system where deterministic graph algor
 
 If you want to explore and test the system immediately without running it locally, use the live deployed links:
 
-- **Live Frontend Operator Console**: [https://hearty-spirit-production-7a5f.up.railway.app/](https://hearty-spirit-production-7a5f.up.railway.app/)
+- **Live Frontend Operator Console**: [https://flash-power-grid-fault-localization-system.up.railway.app/](https://flash-power-grid-fault-localization-system.up.railway.app/)
 - **Live Backend OpenAPI Docs**: [https://power-grid-fault-localization-production.up.railway.app/docs](https://power-grid-fault-localization-production.up.railway.app/docs)
 
 ---
