@@ -63,8 +63,8 @@ The system includes an AI-powered **Root Cause Analysis & Action Recommendation*
 
 ## Demonstration Video
 
-[![System Walkthrough Demo](https://cdn.loom.com/sessions/thumbnails/79013975ffe24dd88dd129945fd9891d-with-play.gif)](https://www.loom.com/share/79013975ffe24dd88dd129945fd9891d)  
-*(Watch full feature demonstration video: [https://www.loom.com/share/79013975ffe24dd88dd129945fd9891d](https://www.loom.com/share/79013975ffe24dd88dd129945fd9891d))*
+[![System Walkthrough Demo](https://cdn.loom.com/sessions/thumbnails/b97eb1a320a34ac2a7ed5ec38c8cf90c-with-play.gif)](https://www.loom.com/share/b97eb1a320a34ac2a7ed5ec38c8cf90c)  
+*(Watch full feature demonstration video: [https://www.loom.com/share/b97eb1a320a34ac2a7ed5ec38c8cf90c](https://www.loom.com/share/b97eb1a320a34ac2a7ed5ec38c8cf90c))*
 
 ---
 
