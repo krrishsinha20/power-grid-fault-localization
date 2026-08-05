@@ -2,12 +2,30 @@
 
 A real-time power grid fault localization system where deterministic graph algorithms identify fault boundaries while an LLM generates human-readable root-cause analysis and recommended actions. The system ingests high-frequency telemetry from grid sensors, builds a dynamic topology tree, accurately localizes physical line and transformer failures to single boundaries, suppresses noise and scheduled outages, auto-generates tickets, and provides AI-powered root-cause explanations on demand.
 
-## One-Command Start
+## Quick Start (Clone & Run)
 
-Spin up the entire stack (PostgreSQL database, FastAPI backend, and React/Vite frontend) with a single command:
+To clone the repository and launch the entire stack from your terminal:
 
 ```bash
+# 1. Clone the public repository
+git clone https://github.com/krrishsinha20/power-grid-fault-localization.git
+
+# 2. Change into the repository root directory
+cd power-grid-fault-localization
+
+# 3. Launch all services (PostgreSQL, FastAPI Backend, React Frontend)
 docker compose up --build
+```
+
+Once initialization finishes and database seeding completes, your terminal will display:
+
+```text
+================================================================
+  FLASH — Power Grid Fault Localization System Ready!
+  • Frontend Operator Console : http://localhost:5173
+  • Backend OpenAPI Docs      : http://localhost:8000/docs
+  • Backend API Base URL      : http://localhost:8000
+================================================================
 ```
 
 - **Frontend Console**: [http://localhost:5173](http://localhost:5173)
