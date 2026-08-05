@@ -11,6 +11,8 @@ If you want to explore and test the system immediately without running it locall
 - **Live Frontend Operator Console**: [https://flash-power-grid-fault-localization-system.up.railway.app/](https://flash-power-grid-fault-localization-system.up.railway.app/)
 - **Live Backend OpenAPI Docs**: [https://power-grid-fault-localization-production.up.railway.app/docs](https://power-grid-fault-localization-production.up.railway.app/docs)
 
+> **Note:** The live deployment is hosted on Railway's free tier and may take 30–60 seconds to wake up on the first load. If the page appears blank or slow, wait a moment and refresh.
+
 ---
 
 ## Quick Start (Clone & Run)
