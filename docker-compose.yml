@@ -52,7 +52,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend/frontend
       args:
         # Baked into the frontend bundle at build time (Vite only
         # reads VITE_* vars at build, not at container runtime).

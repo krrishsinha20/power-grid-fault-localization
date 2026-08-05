@@ -1,0 +1,165 @@
+# System Architecture & Technical Design
+
+This document details the architectural design, algorithmic decisions, data structures, and trade-offs underpinning the AI Power Grid Fault Localization System.
+
+---
+
+## Data Flow Diagram
+
+![Architecture diagram](./architecture-diagram.png)
+
+*(Diagram: pole device → ingest → localization engine → incident/ticket store → operator console, showing the scheduled-outage suppression path and the AI-explain side-path.)*
+
+---
+
+## Data Sourcing & Ingestion Pipeline
+
+Grid sensors deployed across distribution poles transmit real-time telemetry packets containing node state (energized vs dark), voltage, current, timestamp, and sequence number (`seq`).
+
+### 1. Deduplication via Sequence Numbers
+Telemetry ingestion handles high-frequency bursts and duplicate packets (e.g. 5x retransmissions over cellular networks):
+- Each telemetry packet carries an incremental integer `seq`.
+- Ingestion checks the last recorded sequence number for the device. If `incoming_seq <= last_seq`, the packet is flagged as a duplicate and discarded without triggering state re-evaluations or redundant DB writes.
+
+### 2. Out-of-Order Packet Handling
+Network delays can cause telemetry packets to arrive out of chronological order:
+- Packets are evaluated against `last_telemetry_timestamp`. If an incoming packet has a timestamp older than the latest saved state for that node, the system ignores state transitions.
+- Newer telemetry state always overrides stale, late-arriving packets.
+
+### 3. Clock Skew Tolerance
+Sensors at remote transformers or poles may experience clock drift relative to server time:
+- Ingestion enforces a configurable clock skew window ($\pm 300$ seconds).
+- Timestamps exceeding this skew threshold are normalized to server ingestion time before processing, preventing premature or delayed outage window evaluation.
+
+---
+
+## Topology Representation & Data Storage
+
+Power distribution grids operate as hierarchical tree structures: **Substation $\rightarrow$ 11kV Feeder $\rightarrow$ Distribution Transformer $\rightarrow$ Low Voltage Spans $\rightarrow$ Consumer Poles**.
+
+### Why Graph/Tree Structure Over Flat Tables?
+A flat relational table cannot represent multi-hop downstream dependency paths efficiently. Determining which poles are impacted by an upstream conductor snap requires recursive ancestor/descendant queries.
+
+1. **In-Memory NetworkX Graph (`GraphBuilder`)**:
+   - Built on startup from PostgreSQL pole and connectivity tables.
+   - Directed acyclic graph (DAG) where nodes represent poles/transformers and directed edges represent electrical spans flowing downstream.
+   - Permits $O(V + E)$ graph traversal to instantly query subtrees, downstream node counts, and parent-child boundary states.
+
+2. **PostgreSQL Relational Storage**:
+   - Persists node metadata (coordinates, pincode, feeder_id, transformer_id, digitized flag).
+   - Persists immutable incident logs and ticket status states (`DETECTED`, `ACKNOWLEDGED`, `IN_PROGRESS`, `VERIFIED`, `CLOSED`).
+
+---
+
+## Localization Algorithm
+
+The core localization engine converts raw node-level state shifts into precise physical fault boundaries.
+
+### Localization Pipeline Flow
+
+![Localization Pipeline Flow](./localization-pipeline-diagram.png)
+
+*(Pipeline: GraphBuilder → TopologyInference → BoundaryDetector → DownstreamCounter → ConfidenceEngine → OutageService → ClassifierService)*
+
+```
+       [ Feeder / Substation ]
+                 │
+             (Pole P1) [LIVE]
+                 │  <--- FAULT BOUNDARY (Span P1-P2)
+             (Pole P2) [DARK]
+            /        \
+    (Pole P3) [DARK]  (Pole P4) [DARK]
+```
+
+### 1. Boundary Detection (Last-Live / First-Dark)
+The algorithm inspects directed graph edges $(U, V)$ where $U$ is the parent node and $V$ is the child node:
+- **Condition**: Parent node $U$ is `LIVE` (or connected directly to energized upstream line) and child node $V$ is `DARK`.
+- The physical fault is localized to the span $(U, V)$ immediately preceding node $V$.
+
+### 2. Shared Incident Grouping Logic
+Early implementations suffered from a critical bug where 10 dark downstream poles created 10 separate incident tickets. To resolve this, all fault entry points pass through unified grouping logic:
+- The system traverses the downstream subtree starting at boundary node $V$.
+- All downstream dark poles are grouped into **exactly ONE Incident** anchored at the boundary span.
+- **Feeder-Wide Blackouts**: If *every* transformer on an 11kV feeder becomes dark simultaneously, the engine collapses all individual transformer boundary alerts into a single `FEEDER_FAULT` incident with `transformer_id: MULTIPLE`.
+
+### 3. Simultaneous Independent Faults
+If two separate physical lines break concurrently on distinct branches (e.g. Feeder A Span 3 and Feeder B Span 7), the engine detects two independent $(U_1, V_1)$ and $(U_2, V_2)$ boundaries. Because downstream graph walks remain strictly within separate subtrees, two distinct incidents are generated without incorrect merging or splitting.
+
+### 4. Confidence Scoring Engine
+Confidence reflects topology certainty and boundary precision (base score: 100%):
+- **Boundary Uncertainty Penalty**: If a boundary sits behind undigitized/no-sensor poles, a penalty is applied based on the range of unmonitored candidate poles.
+- **Missing-Topology Penalty**: Applied when fault location involves inferred geometric edges.
+
+### 5. Missing-Topology Approach (Geometric Inference)
+Approximately 60% of distribution transformers in legacy grids lack digitized line ordering.
+- **Spatial Inference**: Uses nearest-neighbor geometric algorithms (Delaunay/Voronoi proximity analysis) to infer downstream connection paths for unmapped transformers.
+- **Evidence-Based Confidence Scaling**:
+  - **Digitized Transformers**: $100\%$ confidence.
+  - **Undigitized / Geometrically Inferred**: Confidence penalty is dynamically calculated based on spatial distance ($D_{meters}$). Measured test confidence values on undigitized transformers yielded **92%** and **87%**, complete with plain-language explanations (e.g. *"Inferred topology connection spanning 142m based on geometric proximity"*).
+
+---
+
+## Noise & False-Positive Handling
+
+The system evaluates incoming telemetry against four distinct noise categories to guarantee zero false outage tickets:
+
+| Noise Category | Telemetry Pattern | System Behavior | Resulting Ticket Action |
+| :--- | :--- | :--- | :--- |
+| **Dead Sensor Failure** | Single isolated node dark, but all downstream nodes report LIVE | Flagged as `SENSOR_FAILURE` | **No Outage Ticket**. Sensor maintenance alert flag only. |
+| **Scheduled Outage** | Telemetry dark within an active maintenance window (`OutageService`) | Suppressed entirely by `is_within_scheduled_outage()` check | **Zero Tickets Created**. Suppressed count logged. |
+| **Duplicate Packets** | Identical `seq` or identical state retransmitted 5x | Ingestion filter drops redundant packets | **Exactly 1 State Change**, zero duplicate tickets. |
+| **Out-of-Order Packets** | Packet timestamp older than existing node timestamp | State transition skipped | **Latest State Retained**, no false state oscillation. |
+
+---
+
+## API Surface Specifications
+
+| Endpoint | Method | Key Parameters / Body | Response / Description |
+| :--- | :--- | :--- | :--- |
+| `/incidents` | `GET` | None | Returns list of all active/historical grid incidents. |
+| `/incidents/{id}` | `GET` | `incident_id` (path) | Returns detailed record for a specific incident. |
+| `/incidents/{id}/status` | `PATCH` | `status` (query) | Updates status of an incident (`DETECTED`, `ACKNOWLEDGED`, etc.). |
+| `/incidents/{id}/explain` | `POST` | `incident_id` (path) | Triggers on-demand Groq AI root cause analysis. |
+| `/tickets` | `GET` | None | Returns all work order tickets with assigned status. |
+| `/tickets/{id}` | `GET` | `ticket_id` (path) | Details of specific work order ticket. |
+| `/tickets/{id}/status` | `PATCH` | `status` (query) | Updates ticket status (`OPEN`, `IN_PROGRESS`, etc.). |
+| `/tickets/{id}/close` | `POST` | `ticket_id` (path) | **Admin Override**: Forces ticket status to `CLOSED` without telemetry verification. |
+| `/telemetry` | `POST` | `TelemetryBatchSchema` | Ingests batch of sensor packets; runs localization engine. |
+| `/dashboard` | `GET` | None | Summary stats (total poles, live vs dark ratio, active incidents, open tickets). |
+| `/poles` | `GET` | `limit` (query) | Returns pole geojson/list for map rendering. |
+| `/scheduled-outages` | `POST` | `OutageCreateSchema` | Registers a planned maintenance window on a feeder/transformer. |
+| `/simulate/span` | `POST` | `span_id`, `inject_noise` | Simulator: Injects a physical conductor fault or sensor failure. |
+| `/simulate/feeder` | `POST` | `feeder_id` | Simulator: Injects a feeder-wide blackout. |
+
+---
+
+## UI / UX Design Rationale
+
+The Operator Console is optimized for high-stress grid monitoring:
+
+1. **Top Live/Dark Ratio Bar First**:
+   - Grid operators need immediate situational awareness of total grid health. A prominent top stats bar displays total poles, live count, dark count, active incidents, and open tickets.
+
+2. **Combined Map + List View**:
+   - Spatial map rendering (Leaflet GIS) allows operators to visualize physical fault locations in relation to roads and geography, while the adjacent incident list provides structured tabular sorting by confidence and priority.
+
+3. **Separated & De-emphasized Force-Close Action**:
+   - The primary ticket resolution path is **Automated Telemetry Verification** (repair telemetry arrives $\rightarrow$ system auto-verifies and closes ticket).
+   - Manual override is labeled **"Admin override: force-close without verification"** and styled distinctly to prevent operators from bypassing verification unintentionally.
+
+---
+
+## AI Root-Cause Explanation Model
+
+The system incorporates an LLM-powered incident explanation module (`AIService`) using Groq (`llama-3.3-70b-versatile`):
+
+### Auxiliary Services & External LLM Workflow
+
+![Auxiliary Services & External LLM Workflow](./services-workflow-diagram.png)
+
+*(Workflow: DeadSensorService & VerificationService → PostgreSQL store; AIService → Groq LLM API)*
+
+- **On-Demand Execution**: AI generation is strictly triggered when an operator clicks *"Explain this fault"* (`POST /incidents/{id}/explain`). It is **never** embedded in the critical telemetry ingestion loop.
+- **Deterministic Safeguard**: Fault detection, incident creation, boundary calculation, and ticketing remain 100% deterministic code. If the AI service fails or times out, fault detection operates with zero impact.
+- **Cost Model & Latency Control**: On-demand execution limits LLM API requests to manual operator investigations (zero cost during background streaming of millions of telemetry points).
+- **Graceful Degradation**: If `GROQ_API_KEY` is missing or the external API raises an error, the backend catches the exception and returns HTTP 503 with plain-language error context while keeping all underlying incident/ticket data intact.
