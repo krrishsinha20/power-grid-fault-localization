@@ -95,9 +95,10 @@ def _run_localization_pipeline(db: Session):
                 pincode=result["pincode"]
             )
 
-            ticket_service.create(incident)
+            ticket = ticket_service.create(incident)
 
-            created_incidents.append(incident)
+            if ticket is not None:
+                created_incidents.append(incident)
 
     return created_incidents, suppressed_count
 

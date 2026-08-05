@@ -15,7 +15,10 @@ class TicketService:
         self,
         incident: Incident,
         priority: str = "HIGH"
-    ) -> Ticket:
+    ) -> Ticket | None:
+
+        if incident.fault_type == "SENSOR_FAILURE":
+            return None
 
         existing = (
             self.db.query(Ticket)
