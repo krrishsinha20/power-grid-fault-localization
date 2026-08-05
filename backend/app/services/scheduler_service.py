@@ -76,4 +76,4 @@ def _run_tick():
 
         db.commit()
     finally:
-        db.close()
+        db.close()
