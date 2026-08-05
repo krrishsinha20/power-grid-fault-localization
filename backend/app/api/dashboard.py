@@ -34,6 +34,7 @@ def dashboard(
     active_incidents = (
         db.query(Incident)
         .filter(
+            Incident.fault_type != "SENSOR_FAILURE",
             Incident.status.in_(
                 [
                     "DETECTED",
