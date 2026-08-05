@@ -163,3 +163,25 @@ The system incorporates an LLM-powered incident explanation module (`AIService`)
 - **Deterministic Safeguard**: Fault detection, incident creation, boundary calculation, and ticketing remain 100% deterministic code. If the AI service fails or times out, fault detection operates with zero impact.
 - **Cost Model & Latency Control**: On-demand execution limits LLM API requests to manual operator investigations (zero cost during background streaming of millions of telemetry points).
 - **Graceful Degradation**: If `GROQ_API_KEY` is missing or the external API raises an error, the backend catches the exception and returns HTTP 503 with plain-language error context while keeping all underlying incident/ticket data intact.
+
+---
+
+## Scale & Extension: One Subdivision to Thirty
+
+The current design handles one city subdivision (~500 poles, 15 transformers, 3 feeders) comfortably. Here is an honest assessment of what extends cleanly and what would need rework at 30× scale.
+
+### What extends without a rewrite
+
+- **Localization algorithm**: `GraphBuilder`, `BoundaryDetector`, `TopologyInference`, and `DownstreamCounter` are all stateless, pure-graph functions. They operate identically whether the input graph has 500 nodes or 15,000. Complexity is O(V + E) per localization pass — linear in network size.
+- **API surface**: All endpoints are subdivision-agnostic. Adding a `subdivision_id` filter parameter to `/incidents`, `/tickets`, and `/poles` requires a single query predicate change, not a structural redesign.
+- **Telemetry ingestion**: The `POST /telemetry` endpoint processes packets independently per `pole_id`. No cross-pole state is held in memory during ingest — it scales horizontally by adding workers.
+- **PostgreSQL schema**: Poles, transformers, and feeders already carry `feeder_id` and `transformer_id` as string identifiers. Adding a `subdivision_id` foreign key to each table is a single migration with no cascading schema changes.
+
+### Where it would need work
+
+- **In-memory graph per request**: `GraphBuilder.build()` currently loads the entire pole and transformer table on every localization pass and builds the full NetworkX graph in memory. For one subdivision this costs ~10 ms. For 30 subdivisions (~15,000 poles), the same approach would cost ~300 ms per pass and consume significantly more memory. The fix is straightforward — scope the query by `subdivision_id` and cache the graph per subdivision with an invalidation signal on telemetry ingest — but it is not implemented yet.
+- **Single Uvicorn worker**: The backend runs one process with no message queue in front of `/telemetry`. At 39 msg/s for one subdivision this is fine. At 30 subdivisions (potentially 1,200 msg/s peak) the ingest endpoint would need an async queue (Redis Streams or Kafka) to buffer spikes without blocking the HTTP server.
+- **Operator console**: The current UI has no subdivision selector — it renders all poles and incidents from the single seeded network. A multi-subdivision deployment would require a subdivision filter in the frontend and a scoped `/poles?subdivision_id=` query before the Leaflet map would remain readable.
+
+In summary: the localization logic, schema, and API are subdivision-ready by design. The in-memory graph build strategy and single-worker ingest are the two known bottlenecks that a production multi-subdivision deployment would need to address first.
+
