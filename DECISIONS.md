@@ -6,10 +6,10 @@ This document logs significant architectural choices, bug resolutions, technical
 
 ## Technical Decision & Bug Fix Log
 
-### [2026-08-04] ADR-006: PIN Code Default Location Mismatch
-- **Status**: Known Issue / Documented Limitation
-- **Context**: `backend/app/utils/constants.py` sets `DEFAULT_PINCODE = "411001"` (Pune, Maharashtra), while generated grid node GIS coordinates are centered around `12.9716, 77.5946` (Bangalore, Karnataka).
-- **Decision**: Retained `411001` default in constants to preserve database schema test compatibility, but documented as a known metadata discrepancy. Future iteration will update `constants.py` to match Bangalore postal codes (`560001`).
+### [2026-08-04] ADR-006: PIN Code & Coordinates Alignment (Bangalore 560001)
+- **Status**: Resolved & Verified
+- **Context**: Previously `backend/app/utils/constants.py` set `DEFAULT_PINCODE = "411001"` (Pune), while grid coordinates were centered around `12.9716, 77.5946` (Bangalore).
+- **Decision**: Updated `DEFAULT_PINCODE` to Bangalore's `560001` and `CITY_NAME` to `Bengaluru` across `constants.py`, synthetic network generators, and backend unit test fixtures to maintain 100% regional metadata consistency.
 
 ### [2026-08-04] ADR-005: Local Postgres for Docker vs. Railway Postgres for Live Deploy Split
 - **Status**: Accepted & Implemented

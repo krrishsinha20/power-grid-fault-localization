@@ -87,7 +87,7 @@ class NetworkGenerator:
 
                     longitude=dt_lon,
 
-                    pincode="411001",
+                    pincode="560001",
 
                 )
 
@@ -259,7 +259,7 @@ class NetworkGenerator:
 
                 longitude=lon,
 
-                pincode="411001",
+                pincode="560001",
 
                 energized=True,
 
