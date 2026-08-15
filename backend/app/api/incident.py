@@ -129,6 +129,11 @@ def explain_incident(
 
     except Exception as e:
 
+        import traceback
+        print("=== AI EXPLAIN ERROR ===")
+        traceback.print_exc()
+        print("========================")
+
         db.rollback()
 
         raise HTTPException(

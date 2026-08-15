@@ -19,7 +19,9 @@ class AIService:
 
             model="openai/gpt-oss-120b",
 
-            api_key=os.getenv("GROQ_API_KEY")
+            groq_api_key=os.getenv("GROQ_API_KEY"),
+
+            temperature=0,
 
         )
 
@@ -62,18 +64,18 @@ Pincode: {incident.pincode}
 Confidence:
 {incident.confidence}%
 
-Generate the response in exactly the following format.
+Generate the response in EXACTLY this format with STRICT character limits:
 
 Fault Summary:
-<2-3 sentences>
+<1-2 sentences, MAX 180 characters>
 
 Probable Root Cause:
-<One paragraph>
+<1 sentence, MAX 180 characters>
 
 Recommended Action:
-<One paragraph>
+<1-2 sentences, MAX 180 characters>
 
-Keep the response under 150 words.
+CRITICAL: Each section must be under 180 characters. No markdown, no bullet points, plain text only.
 """
 
         response = self.model.invoke(

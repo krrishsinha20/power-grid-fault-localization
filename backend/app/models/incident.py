@@ -99,7 +99,7 @@ class Incident(Base):
 
     # AI Output
     root_cause: Mapped[str | None] = mapped_column(
-        String(200),
+        String(1500),
         nullable=True
     )
 
@@ -109,7 +109,7 @@ class Incident(Base):
     )
 
     recommended_action: Mapped[str | None] = mapped_column(
-        String(500),
+        String(1500),
         nullable=True
     )
 
